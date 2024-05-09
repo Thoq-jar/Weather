@@ -60,14 +60,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function capitalizeFirstLetterOfEachWord(str) {
+        return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+
     function displayWeather(data) {
         const cityName = data.name;
         const temperature = data.main.temp;
-        const description = data.weather[0].description;
+        // Capitalize the first letter of each word in the description
+        const description = capitalizeFirstLetterOfEachWord(data.weather[0].description);
         const weatherHTML = `
       <h2>${cityName}</h2>
       <p class="temperature">${temperature}°F</p>
-      <p>Description: ${description}</p>
+      <p>Condition: ${description}</p>
     `;
         weatherInfo.innerHTML = weatherHTML;
     }

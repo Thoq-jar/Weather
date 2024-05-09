@@ -1,0 +1,6 @@
+! (C) 2024 Thoq Industries
+
+new config --> slate_config [
+    {PORT=(11111) | TEMPLATE=('index.html') | SRC=('/') | STYLES=('css/styles.css') | APP=('js/app.js')}
+]
+endconf

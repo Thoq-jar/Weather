@@ -88,7 +88,7 @@ async function fetchWeather(city, lat, lon) {
         const apiKey = "36496bad1955bf3365448965a42b9eac";
         let apiUrl;
         if (city) {
-            apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=imperial`;
+            apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
         } else if (lat && lon) {
             apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
         } else {

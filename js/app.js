@@ -1,32 +1,33 @@
 document.addEventListener("DOMContentLoaded", () => {
     const weatherInfo = document.getElementById("weatherInfo");
 
-    async function getUserLocationAndFetchWeather() {
-        if ("geolocation" in navigator) {
-            try {
-                const position = await navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                        const { latitude, longitude } = position.coords;
-                        const city = await getCityNameFromCoordinates(latitude, longitude);
-                        if (city) {
-                            fetchWeather(city, latitude, longitude); // Pass latitude and longitude here
-                        } else {
-                            showError("Unable to determine city from coordinates.");
-                        }
-                    },
-                    () => {
-                        showError("Unable to access geolocation. Please enable location services.");
-                    },
-                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-                );
-            } catch (error) {
-                console.error("Error accessing geolocation:", error);
-                showError("Error accessing geolocation. Please try again later.");
-            }
-        } else {
-            showError("Geolocation is not supported by this browser.");
+  async function getUserLocationAndFetchWeather() {
+    if ("geolocation" in navigator) {
+        try {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    const city = await getCityNameFromCoordinates(latitude, longitude);
+                    if (city) {
+                        fetchWeather(city); // Pass city name directly here
+                    } else {
+                        showError("Unable to determine city from coordinates.");
+                    }
+                },
+                () => {
+                    showError("Unable to access geolocation. Please enable location services.");
+                },
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            );
+        } catch (error) {
+            console.error("Error accessing geolocation:", error);
+            showError("Error accessing geolocation. Please try again later.");
         }
+    } else {
+        showError("Geolocation is not supported by this browser.");
     }
+}
+
 
     async function getCityNameFromCoordinates(lat, lon) {
         const apiUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
@@ -85,7 +86,7 @@ async function fetchWeather(city, lat, lon) {
         const response = await fetch(apiUrl);
         const data = await response.json();
         if (response.ok) {
-            displayWeather(data, lat, lon); // Pass latitude and longitude to displayWeather
+            displayWeather(data, lat, lon);
         } else {
             showError(data.message);
         }
@@ -106,7 +107,7 @@ async function fetchWeather(city, lat, lon) {
     const humidity = data.main.humidity;
     const description = capitalizeFirstLetterOfEachWord(data.weather[0].description);
 
-    const windSpeed = await fetchWindSpeed(lat, lon); // Fetch wind speed with latitude and longitude
+    const windSpeed = await fetchWindSpeed(lat, lon);
     const windSpeedText = windSpeed !== null ? `${windSpeed} mph` : "N/A";
 
     const airQualityData = await fetchAirQuality(lat, lon);

@@ -11,10 +11,10 @@ async function getUserLocationAndFetchWeather() {
                     fetchWeather(city, latitude, longitude);
                     setInterval(async () => {
                         const updatedCity = await getCityNameFromCoordinates(latitude, longitude);
-                        fetchWeather(updatedCity, latitude, longitude);
+                        fetchWeather(city, latitude, longitude);
 						console.log("Reloading...")
 						window.location.reload();
-                    }, 10000);
+                    }, 60000);
                 },
                 () => {
                     showError("Unable to access geolocation. Please enable location services.");

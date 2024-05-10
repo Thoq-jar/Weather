@@ -6,9 +6,10 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const position = await navigator.geolocation.getCurrentPosition(
                     async (position) => {
-                        const city = await getCityNameFromCoordinates(position.coords.latitude, position.coords.longitude);
+                        const { latitude, longitude } = position.coords;
+                        const city = await getCityNameFromCoordinates(latitude, longitude);
                         if (city) {
-                            fetchWeather(city);
+                            fetchWeather(city, latitude, longitude); // Pass latitude and longitude here
                         } else {
                             showError("Unable to determine city from coordinates.");
                         }
@@ -43,39 +44,102 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    async function fetchWeather(city) {
+    async function fetchAirQuality(lat, lon) {
+        const apiKey = "b379c679-bffb-4a0c-a155-473bf6914f38";
+        const apiUrl = `http://api.airvisual.com/v2/nearest_city?lat=${lat}&lon=${lon}&key=${apiKey}`;
         try {
-            const apiKey = "36496bad1955bf3365448965a42b9eac";
-            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=imperial`;
             const response = await fetch(apiUrl);
             const data = await response.json();
             if (response.ok) {
-                displayWeather(data);
+                return data.data;
             } else {
-                showError(data.message);
+                throw new Error(data.message);
             }
         } catch (error) {
-            console.error("Error fetching weather data:", error);
-            showError("Error fetching weather data. Please try again later.");
+            console.error("Error fetching air quality data:", error);
+            return null;
         }
     }
+
+    async function fetchWindSpeed(lat, lon) {
+        const apiKey = "36496bad1955bf3365448965a42b9eac";
+        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
+        try {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            if (response.ok) {
+                return data.wind.speed;
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            console.error("Error fetching wind speed data:", error);
+            return null;
+        }
+    }
+
+async function fetchWeather(city, lat, lon) {
+    try {
+        const apiKey = "36496bad1955bf3365448965a42b9eac";
+        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=imperial`;
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        if (response.ok) {
+            displayWeather(data, lat, lon); // Pass latitude and longitude to displayWeather
+        } else {
+            showError(data.message);
+        }
+    } catch (error) {
+        console.error("Error fetching weather data:", error);
+        showError("Error fetching weather data. Please try again later.");
+    }
+}
+
 
     function capitalizeFirstLetterOfEachWord(str) {
         return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     }
 
-    function displayWeather(data) {
-        const cityName = data.name;
-        const temperature = data.main.temp;
-        // Capitalize the first letter of each word in the description
-        const description = capitalizeFirstLetterOfEachWord(data.weather[0].description);
+   async function displayWeather(data, lat, lon) {
+    const cityName = data.name;
+    const temperature = data.main.temp;
+    const humidity = data.main.humidity;
+    const description = capitalizeFirstLetterOfEachWord(data.weather[0].description);
+
+    const windSpeed = await fetchWindSpeed(lat, lon); // Fetch wind speed with latitude and longitude
+    const windSpeedText = windSpeed !== null ? `${windSpeed} mph` : "N/A";
+
+    const airQualityData = await fetchAirQuality(lat, lon);
+    if (airQualityData) {
+        const airQualityIndex = airQualityData.aqi;
+        const airQualityDescription = airQualityData.quality;
+
         const weatherHTML = `
-      <h2>${cityName}</h2>
-      <p class="temperature">${temperature}°F</p>
-      <p>Condition: ${description}</p>
-    `;
+          <h2>${cityName}</h2>
+          <p class="temperature">${temperature}°F</p>
+          <p>Humidity: ${humidity}%</p>
+		  <p>Condition: ${description}</p>
+		  <!--
+          <p>Wind Speed: ${windSpeedText}</p>
+          <p>[WIP] AQI: ${airQualityIndex} (${airQualityDescription})</p>
+		  -->
+        `;
+        weatherInfo.innerHTML = weatherHTML;
+    } else {
+        const weatherHTML = `
+          <h2>${cityName}</h2>
+          <p class="temperature">${temperature}°F</p>
+          <p>Humidity: ${humidity}%</p>
+          <p>Condition: ${description}</p>
+		  <!--
+          <p>Wind Speed: ${windSpeedText}</p>
+          <p>[WIP] AQI: N/A</p>
+		  -->
+        `;
         weatherInfo.innerHTML = weatherHTML;
     }
+}
+
 
     function showError(message) {
         weatherInfo.innerHTML = `<p>${message}</p>`;
@@ -108,7 +172,6 @@ document.addEventListener("DOMContentLoaded", () => {
     searchButton.addEventListener("click", async () => {
         let city = cityInput.value.trim();
         if (city === "") {
-            alert("Please enter a city name or coordinates.");
             return;
         }
         const parsedCoordinates = parseCoordinates(city);

@@ -9,12 +9,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 navigator.geolocation.getCurrentPosition(
                     async (position) => {
                         const { latitude, longitude } = position.coords;
-                        fetchWeather(null, latitude, longitude); // Pass null for city
+                        fetchWeather(null, latitude, longitude);
                         setInterval(async () => {
-                            fetchWeather(null, latitude, longitude); // Pass null for city
+                            fetchWeather(null, latitude, longitude);
                             console.log("Reloading...")
                             window.location.reload();
-                        }, 60000);
+                        }, 100000);
                     },
                     () => {
                         showError("Unable to access geolocation. Please enable location services.");

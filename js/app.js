@@ -1,18 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
     const weatherInfo = document.getElementById("weatherInfo");
 
-  async function getUserLocationAndFetchWeather() {
+async function getUserLocationAndFetchWeather() {
     if ("geolocation" in navigator) {
         try {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
-                    const city = await getCityNameFromCoordinates(latitude, longitude);
-                    if (city) {
-                        fetchWeather(city); // Pass city name directly here
-                    } else {
-                        showError("Unable to determine city from coordinates.");
-                    }
+                    fetchWeather(null, latitude, longitude); // Pass latitude and longitude directly
                 },
                 () => {
                     showError("Unable to access geolocation. Please enable location services.");
@@ -27,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showError("Geolocation is not supported by this browser.");
     }
 }
+
 
 
     async function getCityNameFromCoordinates(lat, lon) {
@@ -82,11 +78,18 @@ document.addEventListener("DOMContentLoaded", () => {
 async function fetchWeather(city, lat, lon) {
     try {
         const apiKey = "36496bad1955bf3365448965a42b9eac";
-        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=imperial`;
+        let apiUrl;
+        if (city) {
+            apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=imperial`;
+        } else if (lat && lon) {
+            apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
+        } else {
+            throw new Error("City name or coordinates are required.");
+        }
         const response = await fetch(apiUrl);
         const data = await response.json();
         if (response.ok) {
-            displayWeather(data, lat, lon);
+            displayWeather(data);
         } else {
             showError(data.message);
         }

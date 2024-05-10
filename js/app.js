@@ -7,7 +7,14 @@ async function getUserLocationAndFetchWeather() {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
-                    fetchWeather(null, latitude, longitude); // Pass latitude and longitude directly
+                    const city = await getCityNameFromCoordinates(latitude, longitude);
+                    fetchWeather(city, latitude, longitude);
+                    setInterval(async () => {
+                        const updatedCity = await getCityNameFromCoordinates(latitude, longitude);
+                        fetchWeather(updatedCity, latitude, longitude);
+						console.log("Reloading...")
+						window.location.reload();
+                    }, 10000);
                 },
                 () => {
                     showError("Unable to access geolocation. Please enable location services.");
@@ -22,7 +29,6 @@ async function getUserLocationAndFetchWeather() {
         showError("Geolocation is not supported by this browser.");
     }
 }
-
 
 
     async function getCityNameFromCoordinates(lat, lon) {
@@ -41,6 +47,7 @@ async function getUserLocationAndFetchWeather() {
         }
     }
 
+	/*
     async function fetchAirQuality(lat, lon) {
         const apiKey = "b379c679-bffb-4a0c-a155-473bf6914f38";
         const apiUrl = `http://api.airvisual.com/v2/nearest_city?lat=${lat}&lon=${lon}&key=${apiKey}`;
@@ -74,7 +81,8 @@ async function getUserLocationAndFetchWeather() {
             return null;
         }
     }
-
+*/
+	
 async function fetchWeather(city, lat, lon) {
     try {
         const apiKey = "36496bad1955bf3365448965a42b9eac";
@@ -110,10 +118,11 @@ async function fetchWeather(city, lat, lon) {
     const humidity = data.main.humidity;
     const description = capitalizeFirstLetterOfEachWord(data.weather[0].description);
 
-    const windSpeed = await fetchWindSpeed(lat, lon);
-    const windSpeedText = windSpeed !== null ? `${windSpeed} mph` : "N/A";
+    // const windSpeed = await fetchWindSpeed(lat, lon);
+    // const windSpeedText = windSpeed !== null ? `${windSpeed} mph` : "N/A";
 
-    const airQualityData = await fetchAirQuality(lat, lon);
+    // const airQualityData = await fetchAirQuality(lat, lon);
+	   /*
     if (airQualityData) {
         const airQualityIndex = airQualityData.aqi;
         const airQualityDescription = airQualityData.quality;
@@ -130,19 +139,16 @@ async function fetchWeather(city, lat, lon) {
         `;
         weatherInfo.innerHTML = weatherHTML;
     } else {
+	   */
         const weatherHTML = `
           <h2>${cityName}</h2>
           <p class="temperature">${temperature}°F</p>
           <p>Humidity: ${humidity}%</p>
           <p>Condition: ${description}</p>
-		  <!--
-          <p>Wind Speed: ${windSpeedText}</p>
-          <p>[WIP] AQI: N/A</p>
-		  -->
         `;
         weatherInfo.innerHTML = weatherHTML;
     }
-}
+// }
 
 
     function showError(message) {

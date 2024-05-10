@@ -1,111 +1,58 @@
 document.addEventListener("DOMContentLoaded", () => {
     const weatherInfo = document.getElementById("weatherInfo");
+    const searchButton = document.getElementById("searchButton");
+    const cityInput = document.getElementById("cityInput");
 
-async function getUserLocationAndFetchWeather() {
-    if ("geolocation" in navigator) {
-        try {
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const { latitude, longitude } = position.coords;
-                    const city = await getCityNameFromCoordinates(latitude, longitude);
-                    fetchWeather(city, latitude, longitude);
-                    setInterval(async () => {
-                        const updatedCity = await getCityNameFromCoordinates(latitude, longitude);
-                        fetchWeather(city, latitude, longitude);
-						console.log("Reloading...")
-						window.location.reload();
-                    }, 60000);
-                },
-                () => {
-                    showError("Unable to access geolocation. Please enable location services.");
-                },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-            );
-        } catch (error) {
-            console.error("Error accessing geolocation:", error);
-            showError("Error accessing geolocation. Please try again later.");
-        }
-    } else {
-        showError("Geolocation is not supported by this browser.");
-    }
-}
-
-
-    async function getCityNameFromCoordinates(lat, lon) {
-        const apiUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
-        try {
-            const response = await fetch(apiUrl);
-            const data = await response.json();
-            if (data.locality) {
-                return data.locality;
-            } else {
-                throw new Error("City not found in response.");
+    async function getUserLocationAndFetchWeather() {
+        if ("geolocation" in navigator) {
+            try {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        fetchWeather(null, latitude, longitude); // Pass null for city
+                        setInterval(async () => {
+                            fetchWeather(null, latitude, longitude); // Pass null for city
+                            console.log("Reloading...")
+                            window.location.reload();
+                        }, 60000);
+                    },
+                    () => {
+                        showError("Unable to access geolocation. Please enable location services.");
+                    },
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            } catch (error) {
+                console.error("Error accessing geolocation:", error);
+                showError("Error accessing geolocation. Please try again later.");
             }
-        } catch (error) {
-            console.error("Error getting city name from coordinates:", error);
-            return null;
+        } else {
+            showError("Geolocation is not supported by this browser.");
         }
     }
 
-	/*
-    async function fetchAirQuality(lat, lon) {
-        const apiKey = "b379c679-bffb-4a0c-a155-473bf6914f38";
-        const apiUrl = `http://api.airvisual.com/v2/nearest_city?lat=${lat}&lon=${lon}&key=${apiKey}`;
+    async function fetchWeather(city, lat, lon) {
         try {
+            const apiKey = "36496bad1955bf3365448965a42b9eac";
+            let apiUrl;
+            if (city) {
+                apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=imperial`;
+            } else if (lat && lon) {
+                apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
+            } else {
+                throw new Error("City name or coordinates are required.");
+            }
             const response = await fetch(apiUrl);
             const data = await response.json();
             if (response.ok) {
-                return data.data;
+                displayWeather(data);
             } else {
-                throw new Error(data.message);
+                showError(data.message);
             }
         } catch (error) {
-            console.error("Error fetching air quality data:", error);
-            return null;
+            console.error("Error fetching weather data:", error);
+            showError("Error fetching weather data. Please try again later.");
         }
     }
-
-    async function fetchWindSpeed(lat, lon) {
-        const apiKey = "36496bad1955bf3365448965a42b9eac";
-        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
-        try {
-            const response = await fetch(apiUrl);
-            const data = await response.json();
-            if (response.ok) {
-                return data.wind.speed;
-            } else {
-                throw new Error(data.message);
-            }
-        } catch (error) {
-            console.error("Error fetching wind speed data:", error);
-            return null;
-        }
-    }
-*/
-	
-async function fetchWeather(city, lat, lon) {
-    try {
-        const apiKey = "36496bad1955bf3365448965a42b9eac";
-        let apiUrl;
-        if (city) {
-            apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
-        } else if (lat && lon) {
-            apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
-        } else {
-            throw new Error("City name or coordinates are required.");
-        }
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-        if (response.ok) {
-            displayWeather(data);
-        } else {
-            showError(data.message);
-        }
-    } catch (error) {
-        console.error("Error fetching weather data:", error);
-        showError("Error fetching weather data. Please try again later.");
-    }
-}
 
 
     function capitalizeFirstLetterOfEachWord(str) {

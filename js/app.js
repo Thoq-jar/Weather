@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             fetchWeather(null, latitude, longitude);
                             console.log("Reloading...")
                             window.location.reload();
-                        }, 100000);
+                        }, 600000);
                     },
                     () => {
                         showError("Unable to access geolocation. Please enable location services.");

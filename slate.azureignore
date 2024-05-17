@@ -1,0 +1,85 @@
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
+const app = express();
+const { exec } = require('child_process');
+const os = require('os');
+
+const VERSION = 'v1.3';
+const PORT = '3000';
+
+console.clear();
+console.log("----------------------------------------------------");
+console.log(`Slate server ${VERSION}`);
+console.log("Developed by Tristan @ Thoq Industries");
+console.log("Node.js Version: " + process.version);
+exec('npm -v', (error, stdout, stderr) => {
+    if (error) {
+        console.error(`exec error: ${error}`);
+        return;
+    }
+});
+console.log("CPU: " + os.cpus()[0].model);
+console.log("RAM: " + Math.round(os.totalmem() / 1024 / 1024) + " MB");
+console.log("----------------------------------------------------");
+console.log(" ");
+
+const allowedOrigins = [
+  '*'
+];
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+  app.use(express.static(path.join(__dirname, 'public')));
+  app.use('/css', express.static(path.join(__dirname, 'css')));
+  app.use('/js', express.static(path.join(__dirname, 'js')));
+  app.use('favicon.ico', express.static(path.join(__dirname, 'favicon.ico')));  
+});
+
+app.get('/version', (req, res) => {
+  res.json({ version: VERSION });
+});
+
+const corsOptionsDelegate = function (req, callback) {
+  const corsOptions = {
+    origin: function (origin, callback) {
+      if (allowedOrigins.indexOf(origin)!== -1 ||!origin) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ["GET", "PUT", "POST", "DELETE", "HEAD", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+  };
+  callback(null, corsOptions);
+};
+
+app.use(cors(corsOptionsDelegate));
+
+function getInternalIP() {
+    const networkInterfaces = os.networkInterfaces();
+    let internalIP = 'unknown';
+
+    for (const name of Object.keys(networkInterfaces)) {
+        for (const netInfo of networkInterfaces[name]) {
+            if (netInfo.family === 'IPv4' && !netInfo.internal) {
+                internalIP = netInfo.address;
+                break;
+            }
+        }
+    }
+
+    return internalIP;
+}
+
+app.listen(PORT, () => {
+    console.log('[Slate] → Server Running...');
+    console.log(`[Slate] → Local server running at http://localhost:${PORT}/`);
+    console.log(`[Slate] → Network server running at http://${getInternalIP()}:${PORT}/`);
+    console.log(" ");
+});

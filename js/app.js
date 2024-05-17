@@ -39,21 +39,20 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (lat && lon) {
                 apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
             } else {
-                throw new Error("City name or coordinates are required.");
+                throw new Error("City name required.");
             }
             const response = await fetch(apiUrl);
             const data = await response.json();
             if (response.ok) {
-                displayWeather(data);
+                displayWeather(data, lat, lon);
             } else {
                 showError(data.message);
             }
         } catch (error) {
-            console.error("Error fetching weather data:", error);
+            console.warn("Error fetching weather data:", error);
             showError("Error fetching weather data. Please try again later.");
         }
     }
-
 
     function capitalizeFirstLetterOfEachWord(str) {
         return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -65,28 +64,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const humidity = data.main.humidity;
     const description = capitalizeFirstLetterOfEachWord(data.weather[0].description);
 
-    // const windSpeed = await fetchWindSpeed(lat, lon);
-    // const windSpeedText = windSpeed !== null ? `${windSpeed} mph` : "N/A";
+     // const windSpeed = await fetchWindSpeed(lat, lon);
+     // const windSpeedText = windSpeed !== null ? `${windSpeed} mph` : "N/A";
 
-    // const airQualityData = await fetchAirQuality(lat, lon);
-	   /*
-    if (airQualityData) {
-        const airQualityIndex = airQualityData.aqi;
-        const airQualityDescription = airQualityData.quality;
+     // const airQualityData = await fetchAirQuality(lat, lon);
+	   
+    if (lat != null && lon != null) {
+        // const airQualityIndex = airQualityData.aqi;
+        // const airQualityDescription = airQualityData.quality;
+
+        /*
+          <p>Wind Speed: ${windSpeedText}</p>
+          <p>[WIP] AQI: ${airQualityIndex} (${airQualityDescription})</p>
+        `;
+        */
 
         const weatherHTML = `
           <h2>${cityName}</h2>
           <p class="temperature">${temperature}°F</p>
           <p>Humidity: ${humidity}%</p>
 		  <p>Condition: ${description}</p>
-		  <!--
-          <p>Wind Speed: ${windSpeedText}</p>
-          <p>[WIP] AQI: ${airQualityIndex} (${airQualityDescription})</p>
-		  -->
+          <p>Latitude: ${lat}</p>
+          <p>Longitude: ${lon}</p>
         `;
         weatherInfo.innerHTML = weatherHTML;
     } else {
-	   */
         const weatherHTML = `
           <h2>${cityName}</h2>
           <p class="temperature">${temperature}°F</p>
@@ -95,11 +97,11 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
         weatherInfo.innerHTML = weatherHTML;
     }
-// }
-
+ }
 
     function showError(message) {
-        weatherInfo.innerHTML = `<p>${message}</p>`;
+        weatherInfo.innerHTML = `<p>API Error: ${message}</p>`;
+        console.warn(`API Error: ${message}`)
     }
 
     getUserLocationAndFetchWeather();
